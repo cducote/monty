@@ -70,6 +70,7 @@ export const ProductsScreen: React.FC = () => {
           <ProductInventoryCard
             key={product.id}
             product={product}
+            onPress={() => setSelectedProduct(product)}
           />
         ))}
       </View>

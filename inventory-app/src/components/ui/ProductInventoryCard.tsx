@@ -9,7 +9,7 @@ interface ProductInventoryCardProps {
 }
 
 export const ProductInventoryCard: React.FC<ProductInventoryCardProps> = ({ product, onPress }) => {
-  const { data: variants } = useProductVariants(product.id);
+  const { data: variants, isLoading, error } = useProductVariants(product.id);
 
   const handlePress = () => {
     onPress?.();

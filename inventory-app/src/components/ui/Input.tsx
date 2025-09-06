@@ -74,52 +74,37 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   disabled = false,
   style,
 }) => {
-  const handleIncrement = () => {
-    const newValue = Math.min(value + step, max);
-    onChangeValue(newValue);
-  };
-
-  const handleDecrement = () => {
-    const newValue = Math.max(value - step, min);
-    onChangeValue(newValue);
-  };
-
   const handleTextChange = (text: string) => {
-    const numValue = parseInt(text) || 0;
-    const clampedValue = Math.max(min, Math.min(max, numValue));
-    onChangeValue(clampedValue);
+    // Allow empty string for better UX while typing
+    if (text === '') {
+      onChangeValue(0);
+      return;
+    }
+    
+    const numValue = parseInt(text, 10);
+    
+    // Only update if it's a valid number
+    if (!isNaN(numValue)) {
+      const clampedValue = Math.max(min, Math.min(max, numValue));
+      onChangeValue(clampedValue);
+    }
   };
 
   return (
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
       
-      <View style={styles.numberInputContainer}>
-        <TouchableOpacity
-          style={[styles.numberButton, disabled && styles.buttonDisabled]}
-          onPress={handleDecrement}
-          disabled={disabled || value <= min}
-        >
-          <Text style={styles.numberButtonText}>-</Text>
-        </TouchableOpacity>
-        
-        <TextInput
-          style={[styles.numberInput, disabled && styles.inputDisabled]}
-          value={value.toString()}
-          onChangeText={handleTextChange}
-          keyboardType="numeric"
-          editable={!disabled}
-          textAlign="center"
-        />
-        
-        <TouchableOpacity
-          style={[styles.numberButton, disabled && styles.buttonDisabled]}
-          onPress={handleIncrement}
-          disabled={disabled || value >= max}
-        >
-          <Text style={styles.numberButtonText}>+</Text>
-        </TouchableOpacity>
-      </View>
+      <TextInput
+        style={[styles.simpleNumberInput, disabled && styles.inputDisabled]}
+        value={value.toString()}
+        onChangeText={handleTextChange}
+        keyboardType="numeric"
+        editable={!disabled}
+        textAlign="center"
+        placeholder="0"
+        placeholderTextColor="#8E8E93"
+        selectTextOnFocus={true}
+      />
     </View>
   );
 };
@@ -158,6 +143,17 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     fontSize: 14,
     marginTop: 4,
+  },
+  simpleNumberInput: {
+    borderWidth: 1,
+    borderColor: '#D1D1D6',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    backgroundColor: '#FFFFFF',
+    textAlign: 'center',
   },
   numberInputContainer: {
     flexDirection: 'row',

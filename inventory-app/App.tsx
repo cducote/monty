@@ -3,14 +3,17 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/lib/react-query';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, SafeAreaView, Text, View } from 'react-native';
-import { DatabaseTestScreen } from './src/screens/DatabaseTestScreen';
 import { ProductsScreen } from './src/screens/ProductsScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
+import { CameraScreen } from './src/screens/CameraScreen';
 import { SplashScreen } from './src/screens/SplashScreen';
+import { BottomNavigation, TabType } from './src/components/ui/BottomNavigation';
 import { loadFonts } from './src/utils/fonts';
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>('inventory');
 
   useEffect(() => {
     const loadAppFonts = async () => {
@@ -28,6 +31,19 @@ export default function App() {
 
   const handleSplashComplete = () => {
     setShowSplash(false);
+  };
+
+  const renderCurrentScreen = () => {
+    switch (activeTab) {
+      case 'inventory':
+        return <ProductsScreen />;
+      case 'camera':
+        return <CameraScreen />;
+      case 'settings':
+        return <SettingsScreen />;
+      default:
+        return <ProductsScreen />;
+    }
   };
 
   if (!fontsLoaded) {
@@ -53,7 +69,13 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaView style={styles.container}>
         <StatusBar style="auto" />
-        <ProductsScreen />
+        <View style={styles.content}>
+          {renderCurrentScreen()}
+        </View>
+        <BottomNavigation
+          activeTab={activeTab}
+          onTabPress={setActiveTab}
+        />
       </SafeAreaView>
     </QueryClientProvider>
   );
@@ -63,6 +85,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F7',
+  },
+  content: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
