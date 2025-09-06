@@ -99,12 +99,16 @@ export const useRecordTransaction = () => {
       let newStock: number;
       switch (transaction.transaction_type) {
         case 'received':
-        case 'adjustment':
           newStock = currentVariant.current_stock + transaction.quantity;
           break;
         case 'sold':
         case 'damaged':
           newStock = currentVariant.current_stock - transaction.quantity;
+          break;
+        case 'adjustment':
+          // For adjustments, the quantity can be positive or negative
+          // It represents the change, not an absolute value
+          newStock = currentVariant.current_stock + transaction.quantity;
           break;
         default:
           newStock = currentVariant.current_stock;

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { useProductVariants } from '../hooks/useProducts';
 import { useRecordTransaction } from '../hooks/useInventory';
 import { Product, ProductVariant } from '../types/inventory';
-import { Button } from '../components/ui/Button';
-import { NumberInput } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 
 interface ProductDetailScreenProps {
@@ -15,40 +14,63 @@ interface ProductDetailScreenProps {
 export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ product, onBack }) => {
   const { data: variants, isLoading } = useProductVariants(product.id);
   const recordTransaction = useRecordTransaction();
-  const [editingVariant, setEditingVariant] = useState<string | null>(null);
-  const [newStock, setNewStock] = useState<number>(0);
+  const confettiRef = useRef<any>(null);
 
   const handleEditStock = (variant: ProductVariant) => {
-    setEditingVariant(variant.id);
-    setNewStock(variant.current_stock);
+    Alert.prompt(
+      'Update Stock',
+      `Current stock: ${variant.current_stock}\nEnter new stock amount:`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Save',
+          onPress: (newStockText) => handleSaveStock(variant, newStockText),
+        },
+      ],
+      'plain-text',
+      variant.current_stock.toString(),
+      'numeric'
+    );
   };
 
-  const handleSaveStock = async () => {
-    if (!editingVariant) return;
+  const handleSaveStock = async (variant: ProductVariant, newStockText?: string) => {
+    if (!newStockText || newStockText.trim() === '') {
+      Alert.alert('Error', 'Please enter a valid number');
+      return;
+    }
     
-    const variant = variants?.find(v => v.id === editingVariant);
-    if (!variant) return;
+    const newStock = parseInt(newStockText, 10);
+    
+    if (isNaN(newStock) || newStock < 0) {
+      Alert.alert('Error', 'Please enter a valid number (0 or greater)');
+      return;
+    }
 
     const difference = newStock - variant.current_stock;
     
+    // Only record a transaction if there's actually a change
+    if (difference === 0) {
+      return;
+    }
+    
     try {
       await recordTransaction.mutateAsync({
-        variant_id: editingVariant,
-        transaction_type: difference >= 0 ? 'adjustment' : 'adjustment',
-        quantity: Math.abs(difference),
+        variant_id: variant.id,
+        transaction_type: 'adjustment',
+        quantity: difference, // This can be positive or negative
         notes: `Stock adjustment from ${variant.current_stock} to ${newStock}`,
       });
       
-      setEditingVariant(null);
-      Alert.alert('Success', 'Stock updated successfully');
+      // Trigger confetti celebration instead of alert
+      if (confettiRef.current) {
+        confettiRef.current.start();
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to update stock');
     }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingVariant(null);
-    setNewStock(0);
   };
 
   if (isLoading) {
@@ -64,6 +86,18 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ produc
 
   return (
     <View style={styles.container}>
+      {/* Confetti Cannon - positioned absolutely to cover screen */}
+      <ConfettiCannon
+        ref={confettiRef}
+        count={150}
+        origin={{x: -10, y: 0}}
+        autoStart={false}
+        fadeOut={true}
+        fallSpeed={3000}
+        explosionSpeed={350}
+        colors={['#34C759', '#007AFF', '#FF9F0A', '#FF3B30', '#AF52DE']}
+      />
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
@@ -120,46 +154,21 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ produc
                 </View>
                 
                 <View style={styles.stockSection}>
-                  {editingVariant === variant.id ? (
-                    <View style={styles.editingContainer}>
-                      <NumberInput
-                        value={newStock}
-                        onChangeValue={setNewStock}
-                        min={0}
-                        style={styles.stockInput}
-                      />
-                      <View style={styles.editButtons}>
-                        <Button
-                          title="Save"
-                          onPress={handleSaveStock}
-                          size="small"
-                          loading={recordTransaction.isPending}
-                        />
-                        <Button
-                          title="Cancel"
-                          onPress={handleCancelEdit}
-                          variant="secondary"
-                          size="small"
-                        />
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.stockDisplay}>
-                      <Text style={[
-                        styles.stockValue,
-                        variant.current_stock <= variant.reorder_level ? styles.lowStockValue : styles.normalStockValue
-                      ]}>
-                        {variant.current_stock}
-                      </Text>
-                      <Text style={styles.stockLabel}>in stock</Text>
-                      <TouchableOpacity
-                        style={styles.editButton}
-                        onPress={() => handleEditStock(variant)}
-                      >
-                        <Text style={styles.editButtonText}>Edit</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                  <View style={styles.stockDisplay}>
+                    <Text style={[
+                      styles.stockValue,
+                      variant.current_stock <= variant.reorder_level ? styles.lowStockValue : styles.normalStockValue
+                    ]}>
+                      {variant.current_stock}
+                    </Text>
+                    <Text style={styles.stockLabel}>in stock</Text>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => handleEditStock(variant)}
+                    >
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
               
@@ -354,17 +363,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
-  },
-  editingContainer: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  stockInput: {
-    width: 120,
-  },
-  editButtons: {
-    flexDirection: 'row',
-    gap: 8,
   },
   variantFooter: {
     flexDirection: 'row',
