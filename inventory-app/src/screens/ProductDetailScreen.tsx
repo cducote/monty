@@ -27,7 +27,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ produc
         },
         {
           text: 'Save',
-          onPress: (newStockText) => handleSaveStock(variant, newStockText),
+          onPress: (newStockText?: string) => handleSaveStock(variant, newStockText),
         },
       ],
       'plain-text',
@@ -86,18 +86,6 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ produc
 
   return (
     <View style={styles.container}>
-      {/* Confetti Cannon - positioned absolutely to cover screen */}
-      <ConfettiCannon
-        ref={confettiRef}
-        count={150}
-        origin={{x: -10, y: 0}}
-        autoStart={false}
-        fadeOut={true}
-        fallSpeed={3000}
-        explosionSpeed={350}
-        colors={['#34C759', '#007AFF', '#FF9F0A', '#FF3B30', '#AF52DE']}
-      />
-      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
@@ -184,6 +172,20 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ produc
           ))}
         </View>
       </ScrollView>
+      
+      {/* Confetti Cannon - positioned absolutely to appear in foreground */}
+      <View style={styles.confettiContainer}>
+        <ConfettiCannon
+          ref={confettiRef}
+          count={150}
+          origin={{x: -10, y: 0}}
+          autoStart={false}
+          fadeOut={true}
+          fallSpeed={3000}
+          explosionSpeed={350}
+          colors={['#34C759', '#007AFF', '#FF9F0A', '#FF3B30', '#AF52DE']}
+        />
+      </View>
     </View>
   );
 };
@@ -380,5 +382,15 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#8E8E93',
+  },
+  confettiContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
+    elevation: 9999,
+    pointerEvents: 'none',
   },
 });
