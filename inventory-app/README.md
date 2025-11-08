@@ -44,6 +44,46 @@ A React Native Expo application for managing dog harness and leash inventory, bu
    npm start
    ```
 
+## Deployment
+
+This app is deployed using **EAS Update** (completely free).
+
+### Accessing the Deployed App
+
+**Option 1: Expo Go App (Easiest)**
+1. Install Expo Go from App Store
+2. Sign in with Expo account (cducote)
+3. App appears automatically in "Projects" tab
+
+**Option 2: Direct Link**
+```
+exp://u.expo.dev/update/c5be950d-fa3a-47be-963b-f8d5f92d8dfd
+```
+Open in Expo Go app or share with others
+
+**Option 3: View Deployment Info**
+```bash
+eas branch:list
+```
+
+### Deploying Updates
+
+Whenever you make changes and want to deploy:
+
+```bash
+eas update --branch production --message "Description of your changes"
+```
+
+**Benefits:**
+- ✅ 100% Free
+- ✅ No development server needed
+- ✅ Instant updates to all users
+- ✅ Shareable link/QR code
+- ✅ Works on any device with Expo Go
+
+**Dashboard:**  
+View all deployments at: https://expo.dev/accounts/cducote/projects/inventory-app/updates
+
 ## Project Structure
 
 ```
